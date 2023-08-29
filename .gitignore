@@ -1,5 +1,7 @@
+quickdraw_dataset/
 quickdraw_dataset_png/
 quickdraw_dataset_testing/
+runs/
 /canvas.png
 address_list.txt
 label_list.txt

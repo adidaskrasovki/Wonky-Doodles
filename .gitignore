@@ -2,6 +2,7 @@ quickdraw_dataset/
 quickdraw_dataset_png/
 quickdraw_dataset_testing/
 runs/
+__pycache__/
 /canvas.png
 address_list.txt
 label_list.txt

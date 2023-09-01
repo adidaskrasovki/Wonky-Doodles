@@ -49,15 +49,10 @@ class Quickdraw_Dataset(Dataset):
         return len(self.ID_list)
 
     def get_line_from_txt(self, line_idx, txt_path):
-    # Maybe implement this solution in the future:
         with open(txt_path) as f:
             line = itertools.islice(f, line_idx, line_idx+1)
             line = map(lambda s: s.strip(), line)
             return list(line)[0]
-    # with open(txt_path) as f:
-    #     for idx, line in enumerate(f):
-    #         if idx == line_idx:
-    #             return line.rstrip()
     
     def split_trn_tst(self, trn_tst_ratio):
         self.rnd_ID_list = self.ID_list

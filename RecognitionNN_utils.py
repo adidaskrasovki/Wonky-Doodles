@@ -164,9 +164,9 @@ def get_batch(batches,                              # input dataset, batch-lengt
               get_random = False):                  # ...or pick a random batch
     
     # Start loading screen
-    event = Event()
-    thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-    thread.start()
+    # event = Event()
+    # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
+    # thread.start()
 
     batches_iterator = iter(batches)                                            # init dataset iterator
     if get_random:                                                              # set random index
@@ -180,9 +180,9 @@ def get_batch(batches,                              # input dataset, batch-lengt
             batch_spl, batch_lbl = next(batches_iterator)
 
             # Stop loading screen
-            if not event.is_set():
-                event.set()
-                thread.join()
+            # if not event.is_set():
+            #     event.set()
+            #     thread.join()
             
             return (batch_spl, batch_lbl)                                       # ...and return a tuple of form (batch of samples, batch of labels)
 
@@ -198,10 +198,11 @@ def get_sample(batches,                             # input dataset, batch-lengt
     return (batch[0][sample_idx], batch[1][sample_idx])                         # returns a tuple of form (sample, label)
     
 
-def tb_write_model(model, batches):
+def tb_write_model(model, database):
     logdir =  './runs/'
     writer = SummaryWriter(logdir)
-    writer.add_graph(model, get_sample(batches)[0].to(device))
+    # writer.add_graph(model, get_sample(batches)[0].to(device))
+    writer.add_graph(model, database.__getitem__(0)[0])
 
     writer.flush()
     writer.close()
@@ -217,9 +218,9 @@ def training_loop(model,                            # model input
                   print_fps = 30.):                 # output fps. Needed for not overwhelming the kernel. Also serves to limit tensorboard datasize.
     
     # Start loading screen
-    event = Event()
-    thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-    thread.start()
+    # event = Event()
+    # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
+    # thread.start()
 
     # init func-global variables
     model = model.to(device)
@@ -235,9 +236,9 @@ def training_loop(model,                            # model input
         for batch_idx, (inputs, labels) in enumerate(batches_trn):                  # iter through batches in epoch
             
             # Stop loading screen
-            if not event.is_set():
-                event.set()
-                thread.join()
+            # if not event.is_set():
+            #     event.set()
+            #     thread.join()
             
             # Compute prediction and true value Block
             output_prd = model(inputs.to(device))                                   # calc model output
@@ -288,12 +289,11 @@ def validation_loop(model,                                                      
     with tc.no_grad():                                                              # don't train the model anymore!
 
         # Start loading screen
-        event = Event()
-        thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-        thread.start()
+        # event = Event()
+        # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
+        # thread.start()
 
         model = model.to(device)
-        criterion = criterion.to(device)
         
         # init func-global variables
         n_batches = len(batches_tst)                                                # number of batches
@@ -305,9 +305,9 @@ def validation_loop(model,                                                      
         for batch_idx, (inputs, labels) in enumerate(batches_tst):                  # iter through batches
             
             # Stop loading screen
-            if not event.is_set():
-                event.set()
-                thread.join()
+            # if not event.is_set():
+            #     event.set()
+            #     thread.join()
             
             for inpt, label in zip(inputs, labels):                                 # iter through samples in batches
                 

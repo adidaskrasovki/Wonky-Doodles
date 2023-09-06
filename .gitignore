@@ -2,7 +2,7 @@ quickdraw_dataset/
 quickdraw_dataset_png/
 quickdraw_dataset_testing/
 quickdraw_dataset_testing_png/
-quickdraw_dataset_pth/
+quickdraw_dataset_pt/
 runs/
 __pycache__/
 /canvas.png

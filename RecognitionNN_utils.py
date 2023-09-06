@@ -23,6 +23,7 @@ from threading import Thread as Thread
 from threading import Event as Event
 import re
 import itertools
+import os
 
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
@@ -41,9 +42,24 @@ else:
 #######################
 
 class Quickdraw_Dataset(Dataset):
-    def __init__(self, ID_list, labels_list):
+    def __init__(self, ID_list, datapath, label_list_txt):
+
         self.ID_list = ID_list
-        self.label_list = labels_list
+
+        self.datapath = datapath
+
+        self.label_list_txt = label_list_txt
+
+        with open(label_list_txt, 'r') as f:
+            self.label_list = [col.split('_')[0] for col in f.readlines()]
+
+        with open(label_list_txt, 'r') as f:
+            self.label_n_items_list = [int(col.split('_')[1].replace('\n', '')) for col in f.readlines()]
+        self.label_n_items_list.insert(0,0)
+
+        self.label_n_items_list_cut = self.label_n_items_list[1:len(self.label_n_items_list)]
+
+        self.label = tc.zeros(len(self.label_list), dtype = tc.float32)
 
     def __len__(self):
         return len(self.ID_list)
@@ -55,7 +71,7 @@ class Quickdraw_Dataset(Dataset):
             return list(line)[0]
     
     def split_trn_tst(self, trn_tst_ratio):
-        self.rnd_ID_list = self.ID_list
+        self.rnd_ID_list = self.ID_list.copy()
         np.random.shuffle(self.rnd_ID_list)
 
         self.ID_list_trn = self.rnd_ID_list[0 : math.floor(len(self.ID_list) * trn_tst_ratio)]
@@ -63,19 +79,25 @@ class Quickdraw_Dataset(Dataset):
 
         del self.rnd_ID_list
 
-        return Quickdraw_Dataset(self.ID_list_trn, self.label_list), Quickdraw_Dataset(self.ID_list_tst, self.label_list)
+        return Quickdraw_Dataset(self.ID_list_trn, self.datapath, self.label_list_txt), Quickdraw_Dataset(self.ID_list_tst, self.datapath, self.label_list_txt)
 
     def __getitem__(self, index):
-        filepath = self.get_line_from_txt(self.ID_list[index], 'address_list.txt')
-        sample = tv.transforms.ToTensor()(Image.open(f"{filepath}"))
-        
-        label = tc.zeros(len(self.label_list), dtype = tc.float32) 
-        for idx, category in enumerate(self.label_list):
-            if re.sub('\d', '', filepath).replace('.\\quickdraw_dataset_png\\', '').replace('\\.png', '') == category:
-                label[idx] = 1.
+        index = self.ID_list[index]
+        label_idx = 0
+        for n_items in self.label_n_items_list_cut:
+            if n_items > index:
+                category = self.label_list[label_idx]
+                index = index - self.label_n_items_list[label_idx]
+                filepath = self.get_line_from_txt(index, f"{self.datapath}/{category}/address_list.txt")
                 break
+            label_idx += 1
 
-        return sample, label
+        sample = tv.transforms.ToTensor()(Image.open(filepath))
+        
+        label_cpy = self.label.clone()
+        label_cpy[label_idx] = 1.
+
+        return sample, label_cpy
     
 
 class FeedForward(nn.Module):

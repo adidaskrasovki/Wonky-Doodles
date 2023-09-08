@@ -110,7 +110,7 @@ if __name__ == "__main__":
     model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
                 fc1_dim = int(256),
                 fc2_dim = int(128),
-                fc3_dim = int(64),
+                fc3_dim = int(128),
                 output_dim = len(quickdraw_trn.label_list)
                 )
 

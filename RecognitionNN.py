@@ -176,3 +176,15 @@ if __name__ == "__main__":
     # else:
     #     device = tc.device("cpu")
     # model_trn = model_trn.to(device)
+
+##### SAVE MODEL ######
+######## - 5 - ########
+
+    # Set filepath and model name
+    filepath = './'
+    model_name = 'Wonky_Doodles_CNN_lite20'
+
+    tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
+    tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
+
+    print('Done.')

@@ -80,6 +80,7 @@ class Quickdraw_Dataset(Dataset):
         self.ID_list_tst = self.rnd_ID_list[math.ceil(len(self.ID_list) * trn_tst_ratio) : len(self.ID_list)]
 
         del self.rnd_ID_list
+        np.random.seed()
 
         return Quickdraw_Dataset(self.ID_list_trn, self.datapath, self.label_list_txt), Quickdraw_Dataset(self.ID_list_tst, self.datapath, self.label_list_txt)
 

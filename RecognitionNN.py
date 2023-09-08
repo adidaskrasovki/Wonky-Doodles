@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Adapter from your Dataset to Dataloader and thus specific for each Dataset.
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
 
-    datapath = ".\quickdraw_dataset_png"
+    datapath = "C:/WonkyDoodles/qd_png"
     train_test_ratio = 0.80                                     # define ratio of train/total samples
 
 

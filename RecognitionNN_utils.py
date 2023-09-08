@@ -5,7 +5,7 @@
 import torch as tc
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader, RandomSampler, Subset
+from torch.utils.data import Dataset # , DataLoader, RandomSampler, Subset
 
 import torchvision as tv
 
@@ -21,9 +21,9 @@ import time
 from IPython.display import clear_output
 from threading import Thread as Thread
 from threading import Event as Event
-import re
+# import re
 import itertools
-import os
+# import os
 
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
@@ -218,7 +218,6 @@ def get_sample(batches,                             # input dataset, batch-lengt
 def tb_write_model(model, database):
     logdir =  './runs/'
     writer = SummaryWriter(logdir)
-    # writer.add_graph(model, get_sample(batches)[0].to(device))
     writer.add_graph(model, database.__getitem__(0)[0])
 
     writer.flush()
@@ -352,5 +351,3 @@ def validation_loop(model,                                                      
                     
         print(f'Done. Final Accuracy: {100*acc:.2f} %. Time: {(time.time() - t_0):.2f}s.')  # final output
     return acc                                                                      # returns the final accuracy
-
-print('Done.')

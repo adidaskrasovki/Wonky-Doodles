@@ -71,8 +71,9 @@ class Quickdraw_Dataset(Dataset):
             line = map(lambda s: s.strip(), line)
             return list(line)[0]
     
-    def split_trn_tst(self, trn_tst_ratio):
+    def split_trn_tst(self, trn_tst_ratio, seed=1):
         self.rnd_ID_list = self.ID_list.copy()
+        np.random.seed(seed)
         np.random.shuffle(self.rnd_ID_list)
 
         self.ID_list_trn = self.rnd_ID_list[0 : math.floor(len(self.ID_list) * trn_tst_ratio)]

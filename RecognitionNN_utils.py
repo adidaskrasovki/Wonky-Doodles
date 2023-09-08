@@ -177,7 +177,7 @@ def loading_animation(event, message = 'loading'):                  # Thread, ne
             if event.is_set():
                 os.system('cls')
                 break
-        clear_output(wait = True)
+        os.system('cls')
 
 
 def get_batch(batches,                              # input dataset, batch-length must be > 0
@@ -283,7 +283,7 @@ def training_loop(model,                            # model input
             if time.time() - t_fps >= 1./print_fps:
                 t_fps = time.time()
                 print(f'epoch {epoch + 1}/{n_epochs}; batch {batch_idx + 1}/{n_batches}; learning rate = {optimizer.param_groups[0]["lr"]}; Cost: {cost:.6f}; Running Accuracy: {100 * acc:.2f} %')
-                clear_output(wait = True)
+                os.system('cls')
             # Define your tensorboard data here 
                 if tb_analytics:
                     writer.add_scalar('Training Loss', cost, batch_idx + epoch * n_batches)
@@ -345,12 +345,12 @@ def validation_loop(model,                                                      
                     plt.axis('off')
                     plt.show()
                     time.sleep(2)
-                    clear_output(wait = True)  
+                    os.system('cls')  
                 # Output Block
                 if time.time() - t_fps >= 1./print_fps:
                     t_fps = time.time()
                     print(f'batch {batch_idx + 1}/{n_batches}; Accuracy: {100*acc:.2f} %')
-                    clear_output(wait = True)
+                    os.system('cls')
 
                     
         print(f'Done. Final Accuracy: {100*acc:.2f} %. Time: {(time.time() - t_0):.2f}s.')  # final output

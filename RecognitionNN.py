@@ -45,7 +45,7 @@ writer = SummaryWriter(logdir)      # init tensorboard data writer
 
 dir_counter = 0                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
 
-clear_output()
+os.system('cls')
 
 # CUDA
 if tc.cuda.is_available():

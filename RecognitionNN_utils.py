@@ -13,6 +13,7 @@ import torchvision as tv
 from PIL import Image
 
 # Standard pkg imports
+import os
 import math
 import random
 import numpy as np
@@ -167,13 +168,13 @@ def loading_animation(event, message = 'loading'):                  # Thread, ne
         print(message, sep='', end='')                              # google "python threads" if you are unfamiliar.
         time.sleep(1)
         if event.is_set():
-            clear_output()
+            os.system('cls')
             break
         for i in range(3):
             print('.', sep='', end='')
             time.sleep(1)
             if event.is_set():
-                clear_output()
+                os.system('cls')
                 break
         clear_output(wait = True)
 

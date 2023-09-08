@@ -122,7 +122,7 @@ class ConvNN(nn.Module):
         return ((tc.tensor(input_dim) - tc.tensor(kernel_size) + 2*tc.tensor(padding)) / (tc.tensor(stride))) + 1
         # return (input_dim - kernel_size + 2*padding) / (stride) + 1
 
-    def __init__(self, img_dim, fc1_dim, fc2_dim, output_dim):
+    def __init__(self, img_dim, fc1_dim, fc2_dim, fc3_dim, output_dim):
         super(ConvNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels = img_dim[0],
                                out_channels = 3,
@@ -145,7 +145,8 @@ class ConvNN(nn.Module):
 
         self.fc1 = nn.Linear(in_features = self.adapter_dim, out_features = fc1_dim)
         self.fc2 = nn.Linear(in_features = self.fc1.out_features, out_features = fc2_dim)
-        self.fc3 = nn.Linear(in_features = self.fc2.out_features, out_features = output_dim)
+        self.fc3 = nn.Linear(in_features = self.fc2.out_features, out_features = fc3_dim)
+        self.fc4 = nn.Linear(in_features = self.fc3.out_features, out_features = output_dim)
         
     def forward(self, x):
         out = self.pool(F.relu(self.conv1(x)))
@@ -153,7 +154,8 @@ class ConvNN(nn.Module):
         out = out.view(-1, self.adapter_dim)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = self.fc3(out)
+        out = F.relu(self.fc3(out))
+        out = self.fc4(out)
         return out
 
 

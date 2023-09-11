@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
 
     datapath = "C:/WonkyDoodles/qd_png"
-    train_test_ratio = 0.80                                     # define ratio of train/total samples
+    train_test_ratio = 0.9                                     # define ratio of train/total samples
 
 
     ID_list = []
@@ -108,17 +108,17 @@ if __name__ == "__main__":
 ######## - 1 - ########
 
     model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
-                fc1_dim = int(256),
-                fc2_dim = int(128),
-                fc3_dim = int(128),
+                fc1_dim = int(1024),
+                fc2_dim = int(512),
+                fc3_dim = int(256),
                 output_dim = len(quickdraw_trn.label_list)
                 )
 
     # Optional Block for loading in a model and/or model-state from disk
     # filepath = './'
-    # filename = "Tutorial_CNN.pth"
-    # model = tc.load(f"{filepath}{filename}").to(device)
-    # model.load_state_dict(tc.load(f"{filepath}{filename}_state_dict"))
+    # filename = "Wonky_Doodles_CNN_lite20.pth"
+    # model = tc.load(f"{filepath}{filename}").to('cpu')
+    # model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth"))
 
     ###### LOSS/COST ######
     ###### OPTIMIZER ######
@@ -182,9 +182,9 @@ if __name__ == "__main__":
 
     # Set filepath and model name
     filepath = './'
-    model_name = 'Wonky_Doodles_CNN_lite20'
+    model_name = 'Wonky_Doodles_CNN2_FNN3_lite40_2'
 
     tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
-    tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
+    # tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
 
     print('Done.')

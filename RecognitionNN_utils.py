@@ -143,7 +143,7 @@ class ConvNN(nn.Module):
         self.adapter_dim = self.conv2d_out_dim(img_dim[1:len(img_dim)], self.conv1.kernel_size, self.conv1.padding, self.conv1.stride)
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv2.kernel_size, self.conv2.padding, self.conv2.stride)
-        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+        # self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
         self.adapter_dim = int((self.conv2.out_channels * self.adapter_dim[0] * self.adapter_dim[1]).item())
 
         self.fc1 = nn.Linear(in_features = self.adapter_dim, out_features = fc1_dim)
@@ -153,8 +153,11 @@ class ConvNN(nn.Module):
         
     def forward(self, x):
         out = self.pool(F.relu(self.conv1(x)))
-        out = self.pool(F.relu(self.conv2(out)))
+        # out = self.pool(F.relu(self.conv2(out)))
+        out = F.relu(self.conv2(out))
+
         out = out.view(-1, self.adapter_dim)
+        
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
         out = F.relu(self.fc3(out))
@@ -170,15 +173,15 @@ def loading_animation(event, message = 'loading'):                  # Thread, ne
         print(message, sep='', end='')                              # google "python threads" if you are unfamiliar.
         time.sleep(1)
         if event.is_set():
-            os.system('cls')
+            clear_output(wait=True)
             break
         for i in range(3):
             print('.', sep='', end='')
             time.sleep(1)
             if event.is_set():
-                os.system('cls')
+                clear_output(wait=True)
                 break
-        os.system('cls')
+        clear_output(wait=True)
 
 
 def get_batch(batches,                              # input dataset, batch-length must be > 0
@@ -284,7 +287,7 @@ def training_loop(model,                            # model input
             if time.time() - t_fps >= 1./print_fps:
                 t_fps = time.time()
                 print(f'epoch {epoch + 1}/{n_epochs}; batch {batch_idx + 1}/{n_batches}; learning rate = {optimizer.param_groups[0]["lr"]}; Cost: {cost:.6f}; Running Accuracy: {100 * acc:.2f} %')
-                os.system('cls')
+                clear_output(wait=True)
             # Define your tensorboard data here 
                 if tb_analytics:
                     writer.add_scalar('Training Loss', cost, batch_idx + epoch * n_batches)
@@ -346,12 +349,12 @@ def validation_loop(model,                                                      
                     plt.axis('off')
                     plt.show()
                     time.sleep(2)
-                    os.system('cls')  
+                    clear_output(wait=True)  
                 # Output Block
                 if time.time() - t_fps >= 1./print_fps:
                     t_fps = time.time()
                     print(f'batch {batch_idx + 1}/{n_batches}; Accuracy: {100*acc:.2f} %')
-                    os.system('cls')
+                    clear_output(wait=True)
 
                     
         print(f'Done. Final Accuracy: {100*acc:.2f} %. Time: {(time.time() - t_0):.2f}s.')  # final output

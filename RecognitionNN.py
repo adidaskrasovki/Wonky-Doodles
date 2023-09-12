@@ -43,7 +43,7 @@ logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
 
 
-dir_counter = 0                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
+dir_counter = 3                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
 
 os.system('cls')
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     # Shove both training and test lists into the dataloader.
 
-    batch_size = 32                                                 # define batch_size
+    batch_size = 64                                                 # define batch_size
 
     batches_trn = DataLoader(dataset = quickdraw_trn,                    # samples input
                         batch_size = batch_size,
@@ -107,10 +107,10 @@ if __name__ == "__main__":
 ##### DEFINE MODEL ####
 ######## - 1 - ########
 
-    model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
-                fc1_dim = int(1024),
-                fc2_dim = int(512),
-                fc3_dim = int(256),
+    model = utils.ConvNN_org(quickdraw_trn.__getitem__(0)[0].shape,
+                fc1_dim = int(512*2),
+                fc2_dim = int(256*2),
+                fc3_dim = int(128*2),
                 output_dim = len(quickdraw_trn.label_list)
                 )
 
@@ -140,12 +140,8 @@ if __name__ == "__main__":
     # Optional Block for using tensorboard
     tb_analytics = True
 
-
     if tb_analytics:
-        logdir = f"./runs/{dir_counter}/"
-        writer = SummaryWriter(logdir)
-        utils.tb_write_model(model, quickdraw_trn)
-        dir_counter += 1
+        logdir, writer, dir_counter = utils.tb_analytics_block(dir_counter)
 
 
     # Training Loop. 
@@ -182,7 +178,7 @@ if __name__ == "__main__":
 
     # Set filepath and model name
     filepath = './'
-    model_name = 'Wonky_Doodles_CNN2_FNN3_lite40_2'
+    model_name = 'Wonky_Doodles_CNN2_FFN3_lite40'
 
     tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
     # tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state

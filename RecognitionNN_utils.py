@@ -29,6 +29,7 @@ import itertools
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
+dir_counter = 10
 
 # CUDA
 if tc.cuda.is_available():
@@ -116,8 +117,8 @@ class FeedForward(nn.Module):
         out = self.lin3(out)
         return out
     
-
-class ConvNN(nn.Module):
+    
+class ConvNN_org(nn.Module):
 
     # Conv Output Size:
     # OutputWidth = (Width - FilterSize + 2*Padding) / (Stride) + 1
@@ -126,25 +127,43 @@ class ConvNN(nn.Module):
         # return (input_dim - kernel_size + 2*padding) / (stride) + 1
 
     def __init__(self, img_dim, fc1_dim, fc2_dim, fc3_dim, output_dim):
-        super(ConvNN, self).__init__()
+        super(ConvNN_org, self).__init__()
+
+        self.pool = nn.MaxPool2d(kernel_size = 2,
+                                 stride = 2,
+                                 padding = 0)
+        
+
         self.conv1 = nn.Conv2d(in_channels = img_dim[0],
-                               out_channels = 3,
-                               kernel_size = 5,
+                               out_channels = 2,
+                               kernel_size = 9,
+                               padding = 0,
+                               stride = 1
                                 )
+        self.adapter_dim = self.conv2d_out_dim(img_dim[1:len(img_dim)], self.conv1.kernel_size, self.conv1.padding, self.conv1.stride)
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+
 
         self.conv2 = nn.Conv2d(in_channels = self.conv1.out_channels,
                                out_channels = 16,
-                               kernel_size = 5,
+                               kernel_size = 9,
+                               padding = 0,
+                               stride = 1
                                 )
-
-        self.pool = nn.MaxPool2d(kernel_size = 2,
-                                 stride = 2)
-        
-        self.adapter_dim = self.conv2d_out_dim(img_dim[1:len(img_dim)], self.conv1.kernel_size, self.conv1.padding, self.conv1.stride)
-        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv2.kernel_size, self.conv2.padding, self.conv2.stride)
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+
+        # self.conv3 = nn.Conv2d(in_channels = self.conv2.out_channels,
+        #                        out_channels = 4,
+        #                        kernel_size = 5,
+        #                        padding = 0,
+        #                        stride = 1
+        #                         )
+        # self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv3.kernel_size, self.conv3.padding, self.conv3.stride)
         # self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+  
         self.adapter_dim = int((self.conv2.out_channels * self.adapter_dim[0] * self.adapter_dim[1]).item())
+        print(self.adapter_dim)
 
         self.fc1 = nn.Linear(in_features = self.adapter_dim, out_features = fc1_dim)
         self.fc2 = nn.Linear(in_features = self.fc1.out_features, out_features = fc2_dim)
@@ -153,8 +172,8 @@ class ConvNN(nn.Module):
         
     def forward(self, x):
         out = self.pool(F.relu(self.conv1(x)))
-        # out = self.pool(F.relu(self.conv2(out)))
-        out = F.relu(self.conv2(out))
+        out = self.pool(F.relu(self.conv2(out)))
+        # out = self.pool(F.relu(self.conv3(out)))
 
         out = out.view(-1, self.adapter_dim)
         
@@ -230,6 +249,15 @@ def tb_write_model(model, database):
 
     writer.flush()
     writer.close()
+
+def tb_analytics_block(dir_counter):
+    logdir = f"./runs/{dir_counter}/"
+    writer = SummaryWriter(logdir)
+    # tb_write_model(model, quickdraw_trn)
+    dir_counter += 1
+    return logdir, writer, dir_counter
+
+logdir, writer, dir_counter = tb_analytics_block(dir_counter)
 
 
 def training_loop(model,                            # model input

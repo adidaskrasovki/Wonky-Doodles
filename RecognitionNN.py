@@ -107,7 +107,7 @@ if __name__ == "__main__":
 ##### DEFINE MODEL ####
 ######## - 1 - ########
 
-    model = utils.ConvNN_org(quickdraw_trn.__getitem__(0)[0].shape,
+    model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
                 fc1_dim = int(512*2),
                 fc2_dim = int(256*2),
                 fc3_dim = int(128*2),

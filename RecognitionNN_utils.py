@@ -29,7 +29,7 @@ import itertools
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
-dir_counter = 10
+dir_counter = 0
 
 # CUDA
 if tc.cuda.is_available():
@@ -67,12 +67,12 @@ class Quickdraw_Dataset(Dataset):
         return len(self.ID_list)
 
     def get_line_from_txt(self, line_idx, txt_path):
-        with open(txt_path) as f:
+        with open(txt_path, 'r') as f:
             line = itertools.islice(f, line_idx, line_idx+1)
             line = map(lambda s: s.strip(), line)
             return list(line)[0]
     
-    def split_trn_tst(self, trn_tst_ratio, seed=2):
+    def split_trn_tst(self, trn_tst_ratio, seed=1):
         self.rnd_ID_list = self.ID_list.copy()
         np.random.seed(seed)
         np.random.shuffle(self.rnd_ID_list)

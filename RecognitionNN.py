@@ -64,8 +64,10 @@ if __name__ == "__main__":
     # Adapter from your Dataset to Dataloader and thus specific for each Dataset.
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
 
-    datapath = "C:/WonkyDoodles/qd_png"
-    train_test_ratio = 0.9                                     # define ratio of train/total samples
+    datapath = "E:/WonkyDoodles/qd_png"
+    train_test_ratio = 0.99                                     # define ratio of train/total samples
+    start_ratio = 0.
+    end_ratio = 1.
 
 
     ID_list = []
@@ -76,8 +78,10 @@ if __name__ == "__main__":
                             ID_list.append(ID)
                             ID += 1
 
+    ID_list = ID_list[int(math.floor(start_ratio * len(ID_list))) : int(math.ceil(end_ratio * len(ID_list)))]
+
     quickdraw_dataset = utils.Quickdraw_Dataset(ID_list, datapath, "label_list.txt")
-    quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio)
+    quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio, seed=4)
     
     del ID
     del ID_list
@@ -120,10 +124,10 @@ if __name__ == "__main__":
     # model = tc.load(f"{filepath}{filename}").to('cpu')
     # model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth"))
 
-    ###### LOSS/COST ######
-    ###### OPTIMIZER ######
-    ###### SCHEDULER ######
-    ######## - 2 - ########
+###### LOSS/COST ######
+###### OPTIMIZER ######
+###### SCHEDULER ######
+######## - 2 - ########
 
     criterion = nn.CrossEntropyLoss()
 
@@ -155,32 +159,28 @@ if __name__ == "__main__":
                             scheduler = step_lr_scheduler,
                             tb_analytics = tb_analytics)
 
-####### TESTING #######
+
+##### SAVE MODEL ######
 ######## - 4 - ########
+
+    # Set filepath and model name
+    filepath = './'
+    model_name = 'Wonky_Doodles_CNN2_FFN3_liteXX'
+
+    tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
+    tc.save(optimizer, f"{filepath}{model_name}_optim.pth")
+    # tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
+
+    print(f"Saved Model to {filepath}{model_name}.")
+
+
+####### TESTING #######
+######## - 5 - ########
 
     # Testing Loop.
     # Again, loading batches into memory may take a few minutes. Stay strong.
 
-    # device = tc.device("cpu")                                           # optional, but runs faster on cpu for some reason
     accuracy = utils.validation_loop(print_fps = 5.,                          # See func definition for input details
                             print_miss = False,
                             model = model_trn.to(device),
                             batches_tst = batches_tst)
-
-    # if tc.cuda.is_available():                                          # change back to gpu
-    #     device = tc.device("cuda")
-    # else:
-    #     device = tc.device("cpu")
-    # model_trn = model_trn.to(device)
-
-##### SAVE MODEL ######
-######## - 5 - ########
-
-    # Set filepath and model name
-    filepath = './'
-    model_name = 'Wonky_Doodles_CNN2_FFN3_lite40'
-
-    tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
-    # tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
-
-    print('Done.')

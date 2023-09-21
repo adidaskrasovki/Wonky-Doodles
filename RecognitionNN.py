@@ -43,7 +43,7 @@ logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
 
 
-dir_counter = 3                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
+dir_counter = 69                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
 
 os.system('cls')
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
 
     datapath = "E:/WonkyDoodles/qd_png"
-    train_test_ratio = 0.99                                     # define ratio of train/total samples
+    train_test_ratio = 0.98                                     # define ratio of train/total samples
     start_ratio = 0.
     end_ratio = 1.
 
@@ -73,12 +73,12 @@ if __name__ == "__main__":
     ID_list = []
     ID = 0
     for dir in os.listdir(datapath):
-            with open(f"{datapath}/{dir}/address_list.txt") as g:
+            with open(f"{datapath}/{dir}/address_list.txt", 'r') as g:
+                    # n_lines = len(g)
                     for line in g:
-                            ID_list.append(ID)
-                            ID += 1
-
-    ID_list = ID_list[int(math.floor(start_ratio * len(ID_list))) : int(math.ceil(end_ratio * len(ID_list)))]
+                        # if idx > end_ratio * n_lines: break
+                        ID_list.append(ID)
+                        ID += 1
 
     quickdraw_dataset = utils.Quickdraw_Dataset(ID_list, datapath, "label_list.txt")
     quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio, seed=4)

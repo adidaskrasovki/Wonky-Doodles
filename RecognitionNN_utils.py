@@ -29,7 +29,7 @@ import itertools
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
-dir_counter = 2
+dir_counter = 3
 
 # CUDA
 if tc.cuda.is_available():
@@ -192,7 +192,7 @@ class ConvNN(nn.Module):
         self.conv1 = nn.Conv2d(in_channels = img_dim[0],
                                out_channels = 8,
                                kernel_size = 9,
-                               padding = 0,
+                               padding = 4,
                                stride = 1
                                 )
         self.adapter_dim = self.conv2d_out_dim(img_dim[1:len(img_dim)], self.conv1.kernel_size, self.conv1.padding, self.conv1.stride)
@@ -202,7 +202,7 @@ class ConvNN(nn.Module):
         self.conv2 = nn.Conv2d(in_channels = self.conv1.out_channels,
                                out_channels = 8,
                                kernel_size = 9,
-                               padding = 0,
+                               padding = 4,
                                stride = 1
                                 )
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv2.kernel_size, self.conv2.padding, self.conv2.stride)
@@ -211,13 +211,31 @@ class ConvNN(nn.Module):
         self.conv3 = nn.Conv2d(in_channels = self.conv2.out_channels,
                                out_channels = 8,
                                kernel_size = 9,
-                               padding = 0,
+                               padding = 4,
                                stride = 1
                                 )
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv3.kernel_size, self.conv3.padding, self.conv3.stride)
         self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+
+        self.conv4 = nn.Conv2d(in_channels = self.conv3.out_channels,
+                               out_channels = 8,
+                               kernel_size = 9,
+                               padding = 4,
+                               stride = 1
+                                )
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv4.kernel_size, self.conv4.padding, self.conv4.stride)
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
+
+        self.conv5 = nn.Conv2d(in_channels = self.conv4.out_channels,
+                               out_channels = 8,
+                               kernel_size = 9,
+                               padding = 4,
+                               stride = 1
+                                )
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.conv5.kernel_size, self.conv5.padding, self.conv5.stride)
+        self.adapter_dim = self.conv2d_out_dim(self.adapter_dim, self.pool.kernel_size, self.pool.padding, self.pool.stride)
   
-        self.adapter_dim = int((self.conv3.out_channels * self.adapter_dim[0] * self.adapter_dim[1]).item())
+        self.adapter_dim = int((self.conv5.out_channels * self.adapter_dim[0] * self.adapter_dim[1]).item())
         print(self.adapter_dim)
 
         self.fc1 = nn.Linear(in_features = self.adapter_dim, out_features = fc1_dim)
@@ -229,6 +247,8 @@ class ConvNN(nn.Module):
         out = self.pool(F.relu(self.conv1(x)))
         out = self.pool(F.relu(self.conv2(out)))
         out = self.pool(F.relu(self.conv3(out)))
+        out = self.pool(F.relu(self.conv4(out)))
+        out = self.pool(F.relu(self.conv5(out)))
 
         out = out.view(-1, self.adapter_dim)
         

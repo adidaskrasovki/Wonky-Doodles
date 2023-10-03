@@ -81,7 +81,7 @@ if __name__ == "__main__":
                         ID += 1
 
     quickdraw_dataset = utils.Quickdraw_Dataset(ID_list, datapath, "label_list.txt")
-    quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio, seed=4)
+    quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio, seed=3)
     
     del ID
     del ID_list
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     # Optional Block for loading in a model and/or model-state from disk
     # filepath = './'
-    # filename = "Wonky_Doodles_CNN_lite20.pth"
+    # filename = "Wonky_Doodles_CNN_lite10.pth"
     # model = tc.load(f"{filepath}{filename}").to('cpu')
     # model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth"))
 
@@ -133,6 +133,11 @@ if __name__ == "__main__":
 
     optimizer = tc.optim.Adam(model.parameters(),
                             lr = .001)                                     # define initial learning rate
+    
+    # Optional Block for loading in a optimizer-state from disk
+    # filepath = './'
+    # filename = "Wonky_Doodles_CNN_lite10_optim.pth"
+    # optimizer.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_optim.pth"))
 
     step_lr_scheduler = lr_scheduler.StepLR(optimizer,
                                             step_size = 1,                  # diminish learning rate every n-th epoch...
@@ -169,7 +174,8 @@ if __name__ == "__main__":
 
     tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
     tc.save(optimizer, f"{filepath}{model_name}_optim.pth")
-    # tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
+    tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
+    tc.save(optimizer.state_dict(), f"{filepath}{model_name}_state_dict_optim.pth")
 
     print(f"Saved Model to {filepath}{model_name}.")
 

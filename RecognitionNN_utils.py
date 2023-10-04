@@ -29,7 +29,7 @@ import itertools
 from torch.utils.tensorboard import SummaryWriter
 logdir =  './runs/'                 # dir in which to save run data
 writer = SummaryWriter(logdir)      # init tensorboard data writer
-dir_counter = 3
+dir_counter = 6
 
 # CUDA
 if tc.cuda.is_available():
@@ -240,8 +240,8 @@ class ConvNN(nn.Module):
 
         self.fc1 = nn.Linear(in_features = self.adapter_dim, out_features = fc1_dim)
         self.fc2 = nn.Linear(in_features = self.fc1.out_features, out_features = fc2_dim)
-        self.fc3 = nn.Linear(in_features = self.fc2.out_features, out_features = fc3_dim)
-        self.fc4 = nn.Linear(in_features = self.fc3.out_features, out_features = output_dim)
+        # self.fc3 = nn.Linear(in_features = self.fc2.out_features, out_features = fc3_dim)
+        self.fc4 = nn.Linear(in_features = self.fc2.out_features, out_features = output_dim)
         
     def forward(self, x):
         out = self.pool(F.relu(self.conv1(x)))
@@ -254,7 +254,7 @@ class ConvNN(nn.Module):
         
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
-        out = F.relu(self.fc3(out))
+        # out = F.relu(self.fc3(out))
         out = self.fc4(out)
         return out
 

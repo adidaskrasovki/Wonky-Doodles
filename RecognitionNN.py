@@ -65,18 +65,14 @@ if __name__ == "__main__":
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
 
     datapath = "E:/WonkyDoodles/qd_png"
-    train_test_ratio = 0.98                                     # define ratio of train/total samples
-    start_ratio = 0.
-    end_ratio = 1.
+    train_test_ratio = 0.99                                     # define ratio of train/total samples
 
 
     ID_list = []
     ID = 0
     for dir in os.listdir(datapath):
             with open(f"{datapath}/{dir}/address_list.txt", 'r') as g:
-                    # n_lines = len(g)
                     for line in g:
-                        # if idx > end_ratio * n_lines: break
                         ID_list.append(ID)
                         ID += 1
 
@@ -112,17 +108,18 @@ if __name__ == "__main__":
 ######## - 1 - ########
 
     model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
-                fc1_dim = int(512*2),
-                fc2_dim = int(256*2),
-                fc3_dim = int(128*2),
+                fc1_dim = int(512),
+                fc2_dim = int(256),
+                fc3_dim = int(128),
                 output_dim = len(quickdraw_trn.label_list)
-                )
+                ).to(device)
+    
 
     # Optional Block for loading in a model and/or model-state from disk
-    # filepath = './'
-    # filename = "Wonky_Doodles_CNN_lite10.pth"
-    # model = tc.load(f"{filepath}{filename}").to('cpu')
-    # model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth"))
+    filepath = './'
+    filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
+    # model = tc.load(f"{filepath}{filename}", map_location=device)
+    model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth", map_location=device))
 
 ###### LOSS/COST ######
 ###### OPTIMIZER ######
@@ -135,19 +132,19 @@ if __name__ == "__main__":
                             lr = .001)                                     # define initial learning rate
     
     # Optional Block for loading in a optimizer-state from disk
-    # filepath = './'
-    # filename = "Wonky_Doodles_CNN_lite10_optim.pth"
-    # optimizer.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_optim.pth"))
+    filepath = './'
+    filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
+    optimizer.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_optim.pth", map_location=device))
 
     step_lr_scheduler = lr_scheduler.StepLR(optimizer,
                                             step_size = 1,                  # diminish learning rate every n-th epoch...
-                                            gamma = .1)                     # ...by this diminishing factor
+                                            gamma = 1.)                     # ...by this diminishing factor
 
 ###### TRAINING #######
 ######## - 3 - ########
 
     # Optional Block for using tensorboard
-    tb_analytics = True
+    tb_analytics = False
 
     if tb_analytics:
         logdir, writer, dir_counter = utils.tb_analytics_block(dir_counter)

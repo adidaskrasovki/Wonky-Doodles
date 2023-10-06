@@ -3,63 +3,28 @@
 
 # PyTorch imports
 import torch as tc
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader, RandomSampler, Subset
+from torch.nn import CrossEntropyLoss
+from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
-from torch.multiprocessing import Pool
-
-import torchvision as tv
-import torchvision.io as io
-
-from sklearn import datasets
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-
-# PIL Imports
-from PIL import Image
-from PIL import ImageStat
-from PIL import ImageOps
-from PIL import ImageShow
-from PIL import ImageFilter
 
 # Standard pkg imports
-import sys
 import os
-import math
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-import time
-from IPython.display import clear_output
-from threading import Thread as Thread
-from threading import Event as Event
-import re
 
-# Tensorboard imports
-import tensorboard
-from torch.utils.tensorboard import SummaryWriter
-logdir =  './runs/'                 # dir in which to save run data
-writer = SummaryWriter(logdir)      # init tensorboard data writer
+from RecognitionNN_utils import *
 
+if __name__ == "__main__":
 
-dir_counter = 69                     # counter for setting up tensorboard folders; different training runs will be saved in different folders
+    # CUDA
+    if tc.cuda.is_available():
+        device = tc.device("cuda")
+    else:
+        device = tc.device("cpu")
 
-os.system('cls')
+    print(f"CUDA is available: {tc.cuda.is_available()}")
 
-# CUDA
-if tc.cuda.is_available():
-    device = tc.device("cuda")
-else:
-    device = tc.device("cpu")
-
-print(f"CUDA is available: {tc.cuda.is_available()}")
-
-import RecognitionNN_utils as utils
 
 #### PREPARE DATA ####
 ###### - 0.1 - #######
-if __name__ == "__main__":
 
     # Adapter from your Dataset to Dataloader and thus specific for each Dataset.
     # Microsoft Defender might slow things down here significantly. Take a look at your task manager.
@@ -76,7 +41,7 @@ if __name__ == "__main__":
                         ID_list.append(ID)
                         ID += 1
 
-    quickdraw_dataset = utils.Quickdraw_Dataset(ID_list, datapath, "label_list.txt")
+    quickdraw_dataset = Quickdraw_Dataset(ID_list, datapath, "label_list.txt")
     quickdraw_trn, quickdraw_tst = quickdraw_dataset.split_trn_tst(train_test_ratio, seed=3)
     
     del ID
@@ -107,7 +72,7 @@ if __name__ == "__main__":
 ##### DEFINE MODEL ####
 ######## - 1 - ########
 
-    model = utils.ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
+    model = ConvNN(quickdraw_trn.__getitem__(0)[0].shape,
                 fc1_dim = int(512),
                 fc2_dim = int(256),
                 fc3_dim = int(128),
@@ -116,8 +81,8 @@ if __name__ == "__main__":
     
 
     # Optional Block for loading in a model and/or model-state from disk
-    filepath = './'
-    filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
+    filepath = './models/'
+    filename = "Wonky_Doodles_CNN2_FFN3_lite50.pth"
     # model = tc.load(f"{filepath}{filename}", map_location=device)
     model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth", map_location=device))
 
@@ -126,19 +91,25 @@ if __name__ == "__main__":
 ###### SCHEDULER ######
 ######## - 2 - ########
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = CrossEntropyLoss()
 
     optimizer = tc.optim.Adam(model.parameters(),
                             lr = .001)                                     # define initial learning rate
     
     # Optional Block for loading in a optimizer-state from disk
-    filepath = './'
-    filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
+    # filepath = './models/'
+    # filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
     optimizer.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_optim.pth", map_location=device))
+    optimizer.param_groups[0]["lr"] = .0001
 
     step_lr_scheduler = lr_scheduler.StepLR(optimizer,
                                             step_size = 1,                  # diminish learning rate every n-th epoch...
                                             gamma = 1.)                     # ...by this diminishing factor
+
+    # Optional Block for loading in a lr-scheduler-state from disk
+    # filepath = './models/'
+    # filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
+    step_lr_scheduler.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_lr_scheduler.pth", map_location=device))
 
 ###### TRAINING #######
 ######## - 3 - ########
@@ -146,33 +117,34 @@ if __name__ == "__main__":
     # Optional Block for using tensorboard
     tb_analytics = False
 
-    if tb_analytics:
-        logdir, writer, dir_counter = utils.tb_analytics_block(dir_counter)
-
 
     # Training Loop. 
     # Note that loading the batches into memory might take a few minutes. Take a look at your task manager.
-    model_trn = utils.training_loop(n_epochs = 1,                             # See func definition for input details
+    model_trn = training_loop(n_epochs = 1,                             # See func definition for input details
                             print_fps = 5.,
                             model = model,
                             batches_trn = batches_trn,
                             criterion = criterion,
                             optimizer = optimizer,
                             scheduler = step_lr_scheduler,
-                            tb_analytics = tb_analytics)
+                            device = device)
 
 
 ##### SAVE MODEL ######
 ######## - 4 - ########
 
     # Set filepath and model name
-    filepath = './'
+    filepath = './models/'
     model_name = 'Wonky_Doodles_CNN2_FFN3_liteXX'
 
-    tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
-    tc.save(optimizer, f"{filepath}{model_name}_optim.pth")
+    # tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
+    # tc.save(optimizer, f"{filepath}{model_name}_optim.pth")
+    # tc.save(step_lr_scheduler, f"{filepath}{model_name}_lr_scheduler.pth")
     tc.save(model_trn.state_dict(), f"{filepath}{model_name}_state_dict.pth")       # ...save only the the model state
     tc.save(optimizer.state_dict(), f"{filepath}{model_name}_state_dict_optim.pth")
+    tc.save(step_lr_scheduler.state_dict(), f"{filepath}{model_name}_state_dict_lr_scheduler.pth")
+
+    
 
     print(f"Saved Model to {filepath}{model_name}.")
 
@@ -183,7 +155,8 @@ if __name__ == "__main__":
     # Testing Loop.
     # Again, loading batches into memory may take a few minutes. Stay strong.
 
-    accuracy = utils.validation_loop(print_fps = 5.,                          # See func definition for input details
+    accuracy = validation_loop(print_fps = 5.,                          # See func definition for input details
                             print_miss = False,
                             model = model_trn.to(device),
-                            batches_tst = batches_tst)
+                            batches_tst = batches_tst,
+                            device = device)

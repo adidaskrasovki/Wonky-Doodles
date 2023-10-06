@@ -5,40 +5,18 @@
 import torch as tc
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset # , DataLoader, RandomSampler, Subset
-
+from torch.utils.data import Dataset
 import torchvision as tv
 
 # PIL Imports
 from PIL import Image
 
 # Standard pkg imports
-import os
 import math
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from IPython.display import clear_output
-from threading import Thread as Thread
-from threading import Event as Event
-# import re
 import itertools
-# import os
-
-from torch.utils.tensorboard import SummaryWriter
-logdir =  './runs/'                 # dir in which to save run data
-writer = SummaryWriter(logdir)      # init tensorboard data writer
-dir_counter = 6
-
-# CUDA
-if tc.cuda.is_available():
-    device = tc.device("cuda")
-else:
-    device = tc.device("cpu")
-
-# print(f"CUDA is available: {tc.cuda.is_available()}")
-
 
 #### MODEL CLASSES ####
 #######################
@@ -102,20 +80,6 @@ class Quickdraw_Dataset(Dataset):
         label_cpy[label_idx] = 1.
 
         return sample, label_cpy
-    
-
-class FeedForward(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(FeedForward, self).__init__()
-        self.lin1 = nn.Linear(input_dim, hidden_dim)
-        self.lin2 = nn.ReLU()
-        self.lin3 = nn.Linear(hidden_dim, output_dim)
-        
-    def forward(self, x):
-        out = self.lin1(x)
-        out = self.lin2(out)
-        out = self.lin3(out)
-        return out
     
 
 class NewConvNN(nn.Module):
@@ -262,92 +226,46 @@ class ConvNN(nn.Module):
 ###### FUNCTIONS ######
 #######################
 
-def loading_animation(event, message = 'loading'):                  # Thread, needs a halting event as input!
-    while(True):                                                    # prints a loading animation, run this code somewhere to see what it does.
-        print(message, sep='', end='')                              # google "python threads" if you are unfamiliar.
-        time.sleep(1)
-        if event.is_set():
-            clear_output(wait=True)
-            break
-        for i in range(3):
-            print('.', sep='', end='')
-            time.sleep(1)
-            if event.is_set():
-                clear_output(wait=True)
-                break
-        clear_output(wait=True)
+# def loading_animation(event, message = 'loading'):                  # Thread, needs a halting event as input!
+#     while(True):                                                    # prints a loading animation, run this code somewhere to see what it does.
+#         print(message, sep='', end='')                              # google "python threads" if you are unfamiliar.
+#         time.sleep(1)
+#         if event.is_set():
+#             clear_output(wait=True)
+#             break
+#         for i in range(3):
+#             print('.', sep='', end='')
+#             time.sleep(1)
+#             if event.is_set():
+#                 clear_output(wait=True)
+#                 break
+#         clear_output(wait=True)
 
 
-def get_batch(batches,                              # input dataset, batch-length must be > 0
-              batch_idx = 0,                        # get batch at batch_idx...
-              get_random = False):                  # ...or pick a random batch
-    
-    # Start loading screen
-    # event = Event()
-    # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-    # thread.start()
+# def get_batch(batches,                              # input dataset, batch-length must be > 0
+#               batch_idx = 0,                        # get batch at batch_idx...
+#               get_random = False):                  # ...or pick a random batch
 
-    batches_iterator = iter(batches)                                            # init dataset iterator
-    if get_random:                                                              # set random index
-        batch_idx = random.randrange(len(batches))
-    else:                                                                       # for proper indexing
-        batch_idx += 1
+#     batches_iterator = iter(batches)                                            # init dataset iterator
+#     if get_random:                                                              # set random index
+#         batch_idx = random.randrange(len(batches))
+#     else:                                                                       # for proper indexing
+#         batch_idx += 1
 
-    for i in range(batch_idx):                                                  # iterate through dataset...
-        next(batches_iterator)
-        if i == batch_idx - 1:                                                  # ...until idx...
-            batch_spl, batch_lbl = next(batches_iterator)
-
-            # Stop loading screen
-            # if not event.is_set():
-            #     event.set()
-            #     thread.join()
-            
-            return (batch_spl, batch_lbl)                                       # ...and return a tuple of form (batch of samples, batch of labels)
-
-
-def get_sample(batches,                             # input dataset, batch-length must be > 0
-               sample_idx = 0,                      # get sample at sample_idx,...
-               get_random = False):                 # ...or pick a random sample throughout all batches
-    
-    batch_idx, sample_idx = divmod(sample_idx, len(batches))
-    batch = get_batch(batches, batch_idx, get_random)
-    if get_random:
-        sample_idx = random.randrange(len(batch)) 
-    return (batch[0][sample_idx], batch[1][sample_idx])                         # returns a tuple of form (sample, label)
-    
-
-def tb_write_model(model, database):
-    logdir =  './runs/'
-    writer = SummaryWriter(logdir)
-    writer.add_graph(model, database.__getitem__(0)[0])
-
-    writer.flush()
-    writer.close()
-
-def tb_analytics_block(dir_counter):
-    logdir = f"./runs/{dir_counter}/"
-    writer = SummaryWriter(logdir)
-    # tb_write_model(model, quickdraw_trn)
-    dir_counter += 1
-    return logdir, writer, dir_counter
-
-logdir, writer, dir_counter = tb_analytics_block(dir_counter)
-
+#     for i in range(batch_idx):                                                  # iterate through dataset...
+#         next(batches_iterator)
+#         if i == batch_idx - 1:                                                  # ...until idx...
+#             batch_spl, batch_lbl = next(batches_iterator)            
+#             return (batch_spl, batch_lbl)                                       # ...and return a tuple of form (batch of samples, batch of labels)
 
 def training_loop(model,                            # model input
                   batches_trn,                      # training batches input
                   criterion,                        # cost/loss/criterion function input
                   optimizer,                        # ...
                   scheduler,
+                  device,
                   n_epochs = 1,                     # number of iterations through all batches
-                  tb_analytics = False,             # tensorboard plugin
                   print_fps = 30.):                 # output fps. Needed for not overwhelming the kernel. Also serves to limit tensorboard datasize.
-    
-    # Start loading screen
-    # event = Event()
-    # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-    # thread.start()
 
     # init func-global variables
     model = model.to(device)
@@ -361,11 +279,6 @@ def training_loop(model,                            # model input
     
     for epoch in range(n_epochs):                                                   # iter through epochs
         for batch_idx, (inputs, labels) in enumerate(batches_trn):                  # iter through batches in epoch
-            
-            # Stop loading screen
-            # if not event.is_set():
-            #     event.set()
-            #     thread.join()
             
             # Compute prediction and true value Block
             output_prd = model(inputs.to(device))                                   # calc model output
@@ -390,16 +303,6 @@ def training_loop(model,                            # model input
             if time.time() - t_fps >= 1./print_fps:
                 t_fps = time.time()
                 print(f'epoch {epoch + 1}/{n_epochs}; batch {batch_idx + 1}/{n_batches}; learning rate = {optimizer.param_groups[0]["lr"]}; Cost: {cost:.6f}; Running Accuracy: {100 * acc:.2f} %')
-                clear_output(wait=True)
-            # Define your tensorboard data here 
-                if tb_analytics:
-                    writer.add_scalar('Training Loss', cost, batch_idx + epoch * n_batches)
-                    writer.add_scalar('Training Accuracy', acc, batch_idx + epoch * n_batches)
-            
-            # tidy up tensorboard writer
-            if tb_analytics:
-                writer.flush()
-                writer.close()
             
         scheduler.step()                                                            # diminish learning rate after every epoch
     
@@ -410,16 +313,11 @@ def training_loop(model,                            # model input
 
 def validation_loop(model,                                                          # model input
                     batches_tst,                                                    # test batches input
+                    device,
                     print_miss = False,                                             # option for showing wrong predictions
                     print_fps = 30.):                                               # output fps. Needed for not overwhelming the kernel
     
     with tc.no_grad():                                                              # don't train the model anymore!
-
-        # Start loading screen
-        # event = Event()
-        # thread = Thread(target = loading_animation, daemon=True, args=(event, "Loading Batches. This might take a while"))
-        # thread.start()
-
         model = model.to(device)
         
         # init func-global variables
@@ -429,13 +327,7 @@ def validation_loop(model,                                                      
         t_0 = time.time()                                                           # get current time value
         t_fps = time.time()                                                         # -- " -- for output fps
     
-        for batch_idx, (inputs, labels) in enumerate(batches_tst):                  # iter through batches
-            
-            # Stop loading screen
-            # if not event.is_set():
-            #     event.set()
-            #     thread.join()
-            
+        for batch_idx, (inputs, labels) in enumerate(batches_tst):                  # iter through batches           
             for inpt, label in zip(inputs, labels):                                 # iter through samples in batches
                 
                 output_prd = model(inpt.to(device))                                 # calc model output
@@ -452,12 +344,10 @@ def validation_loop(model,                                                      
                     plt.axis('off')
                     plt.show()
                     time.sleep(2)
-                    clear_output(wait=True)  
                 # Output Block
                 if time.time() - t_fps >= 1./print_fps:
                     t_fps = time.time()
                     print(f'batch {batch_idx + 1}/{n_batches}; Accuracy: {100*acc:.2f} %')
-                    clear_output(wait=True)
 
                     
         print(f'Done. Final Accuracy: {100*acc:.2f} %. Time: {(time.time() - t_0):.2f}s.')  # final output

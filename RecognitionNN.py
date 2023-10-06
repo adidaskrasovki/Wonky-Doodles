@@ -82,9 +82,9 @@ if __name__ == "__main__":
 
     # Optional Block for loading in a model and/or model-state from disk
     filepath = './models/'
-    filename = "Wonky_Doodles_CNN2_FFN3_lite50.pth"
+    filename = "WonkyDoodles.pth"
     # model = tc.load(f"{filepath}{filename}", map_location=device)
-    model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict.pth", map_location=device))
+    model.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_new_state_dict.pth", map_location=device))
 
 ###### LOSS/COST ######
 ###### OPTIMIZER ######
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # filepath = './models/'
     # filename = "Wonky_Doodles_CNN2_FFN3_lite10.pth"
     optimizer.load_state_dict(tc.load(f"{filepath}{filename.replace('.pth', '')}_state_dict_optim.pth", map_location=device))
-    optimizer.param_groups[0]["lr"] = .0001
+    optimizer.param_groups[0]["lr"] = .00001
 
     step_lr_scheduler = lr_scheduler.StepLR(optimizer,
                                             step_size = 1,                  # diminish learning rate every n-th epoch...
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     # Set filepath and model name
     filepath = './models/'
-    model_name = 'Wonky_Doodles_CNN2_FFN3_liteXX'
+    model_name = 'WonkyDoodles_new'
 
     # tc.save(model_trn, f"{filepath}{model_name}.pth")                               # Save the whole model and/or...
     # tc.save(optimizer, f"{filepath}{model_name}_optim.pth")
